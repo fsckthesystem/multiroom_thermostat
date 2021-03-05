@@ -60,12 +60,14 @@ def main():
     checking_thread = threading.Thread(target=node_check)
     checking_thread.daemon = True
 
+    # Start up server
     try:
         init()
         collecting_thread.start()
         checking_thread.start()
         run()
 
+    # Catch ctrl-c and cleanly exit program
     except KeyboardInterrupt:
         print("\nQuiting...\nCleaning up...\n")
         checking_thread.join(1)
