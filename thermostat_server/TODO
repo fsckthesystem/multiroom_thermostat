@@ -1,0 +1,5 @@
+Have a dictionary of deques instead of hard programming one for each room.
+The dictionary will use the room string as the key and a deque as the value.
+I will need to adjust how data is collected and how to determine what mode the thermostat needs to be in.
+
+I need to figure out how to get the ip address for the server, but not the loopback ip address.
