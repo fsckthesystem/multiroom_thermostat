@@ -1,3 +1,11 @@
+#
+# This code is originally by Mike Murray (@TheGeekPub) from https://www.thegeekpub.com/236867/using-the-dht11-temperature-sensor-with-the-raspberry-pi/
+#
+# I have slightly modified it to meet the requirements of my project.
+#
+
+
+
 import Adafruit_DHT
 import time
 import socket
