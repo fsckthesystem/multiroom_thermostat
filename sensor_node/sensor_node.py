@@ -9,14 +9,21 @@
 import Adafruit_DHT
 import time
 import socket
+import sys
+
+if len(sys.argv) != 2:
+    print("Usage: python3 sensor_node.py \"<room name>\"")
+    sys.exit()
+
 
 UDP_IP = socket.gethostbyname("jetsonnano")
 UDP_PORT = 4815
 DHT_SENSOR = Adafruit_DHT.DHT22
 DHT_PIN = 4
-ROOM = "Office"
+ROOM = sys.argv[1]
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 
 while True:
     humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
