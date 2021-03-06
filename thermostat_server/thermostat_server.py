@@ -215,7 +215,6 @@ def run_wd():
             if len(rolling_temps) > 1:
                 loc_temp_diff_tuple = max(combinations(loc_temp_avg, 2), key = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]]))
                 loc_temp_diff = loc_temp_avg[loc_temp_diff_tuple[1]] - loc_temp_avg[loc_temp_diff_tuple[0]]
-                print(loc_temp_diff)
         else:
             continue
 
