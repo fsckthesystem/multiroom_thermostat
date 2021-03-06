@@ -39,7 +39,7 @@ TEMPLOW = 69
 ### This will make it easier to add new rooms dynamically instead of having to hard
 ### program it in.
 
-DEQUELENGTH = 15 # size of the deques
+DEQUELENGTH = 20 # size of the deques
 
 rolling_temp_living_room = deque(DEQUELENGTH*[(TEMPHIGH + TEMPLOW) / 2], DEQUELENGTH)
 rolling_hum_living_room = deque(DEQUELENGTH*[40], DEQUELENGTH)
