@@ -12,7 +12,7 @@ Please be sure to research which wires are for your system and how to wire them 
 ```
 Y = AC
 W = Furnace
-H = Heat pump
+O = Heat pump
 G = Fan
 R = Power
 ```
