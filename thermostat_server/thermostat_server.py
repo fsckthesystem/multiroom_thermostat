@@ -1,11 +1,14 @@
-import RPi.GPIO as GPIO
+"""
+A multiroom thermostat controller
+"""
+
 import socket
 import time
 import threading
-import math
 import datetime
 from collections import deque
 from itertools import combinations
+import RPi.GPIO as GPIO
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM) # set pin naming scheme to rpi
@@ -41,21 +44,24 @@ TEMPLOW = 69
 # This gives make getting a rolling average easier
 
 
-rolling_temps = {}
-rolling_hums = {}
+ROLLING_TEMPS = {}
+ROLLING_HUMS = {}
 
 DEQUELENGTH = 20 # size of the deques
 
 # Keeps track of time of last received datagram for each location
-last_received = {}
+LAST_RECEIVED = {}
 
 
 def main():
+    """
+    Main method
+    """
     # Creating thread for receiving climate info from sensor nodes
     collecting_thread = threading.Thread(target=data_collection)
     collecting_thread.daemon = True
 
-    # Creating thread for checking if nodes have sent data in given 
+    # Creating thread for checking if nodes have sent data in given
     # amount of time.
     checking_thread = threading.Thread(target=node_check)
     checking_thread.daemon = True
@@ -75,38 +81,44 @@ def main():
         GPIO.cleanup()
 
 
-# collects incoming data from nodes and sorts into correct deque
+
 def data_collection():
+    """
+    collects incoming data from nodes and sorts into correct deque
+    """
     while True:
-        data, addr = SOCK.recvfrom(1024) # buffer size is 1024 bytes
+        data = SOCK.recvfrom(1024)[0] # buffer size is 1024 bytes
         message = data.decode()
         loc, temp, hum = message.split(", ")
         temp = (float(temp) * 1.8) + 32 # convert from C to F
 
         # Checks if location is alreay in the rolling_X dictionarys. If not, it creates an entry
         # in the dictionary and populates it with the defaults
-        if loc not in rolling_temps:
-            rolling_temps[loc] = deque(DEQUELENGTH*[((TEMPHIGH + TEMPLOW)/2)], DEQUELENGTH)
-        if loc not in rolling_hums:
-            rolling_hums[loc] = deque(DEQUELENGTH*[40], DEQUELENGTH)
-        
+        if loc not in ROLLING_TEMPS:
+            ROLLING_TEMPS[loc] = deque(DEQUELENGTH*[((TEMPHIGH + TEMPLOW)/2)], DEQUELENGTH)
+        if loc not in ROLLING_HUMS:
+            ROLLING_HUMS[loc] = deque(DEQUELENGTH*[40], DEQUELENGTH)
+
         # Append new temp and humidity to appropriate deque in dictionaries
-        rolling_temps[loc].appendleft(temp)
-        rolling_hums[loc].appendleft(hum)
-        last_received[loc] = datetime.datetime.utcnow()
+        ROLLING_TEMPS[loc].appendleft(temp)
+        ROLLING_HUMS[loc].appendleft(hum)
+        LAST_RECEIVED[loc] = datetime.datetime.utcnow()
 
 
-# Checks if any location has sent data in the past 10 mins
-# if it has not, it removes location from dictionaries
-def node_check():       
+
+def node_check():
+    """
+    Checks if any location has sent data in the past 10 mins
+    if it has not, it removes location from dictionaries
+    """
     time.sleep(7)
     while True:
-        if len(last_received) > 0:
-            for loc in dict(last_received):
-                if (datetime.datetime.utcnow() - last_received[loc]).total_seconds() >= 600:
-                    rolling_temps.pop(loc)
-                    rolling_hums.pop(loc)
-                    last_received.pop(loc)
+        if len(LAST_RECEIVED) > 0:
+            for loc in dict(LAST_RECEIVED):
+                if (datetime.datetime.utcnow() - LAST_RECEIVED[loc]).total_seconds() >= 600:
+                    ROLLING_TEMPS.pop(loc)
+                    ROLLING_HUMS.pop(loc)
+                    LAST_RECEIVED.pop(loc)
         else:
             print("No nodes found. Please check that nodes are running.")
 
@@ -114,6 +126,9 @@ def node_check():
 
 
 def run():
+    """
+    Starts the thermostat
+    """
     print("Starting thermostat")
     time.sleep(7)
     # loop to check rolling average of room temps and to set systems accordingly
@@ -123,20 +138,21 @@ def run():
         above_temphigh = False
         below_templow = False
         loc_temp_diff = 0
-        
-        # Logic for determining average temp for location, temp differences, and 
-        # checks for temps below or above set TEMPMAX and TEMPLOW and sets the 
+
+        # Logic for determining average temp for location, temp differences, and
+        # checks for temps below or above set TEMPMAX and TEMPLOW and sets the
         # above variables accordingly
-        if len(rolling_temps) > 0:
-            for loc in rolling_temps:
-                loc_temp_avg[loc] = sum(rolling_temps[loc])/len(rolling_temps[loc])
+        if len(ROLLING_TEMPS) > 0:
+            for loc in ROLLING_TEMPS:
+                loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
                 if loc_temp_avg[loc] > TEMPHIGH:
                     above_temphigh = True
                 elif loc_temp_avg[loc] < TEMPLOW:
                     below_templow = True
-            if len(rolling_temps) > 1:
-                loc_temp_diff_tuple = max(combinations(loc_temp_avg, 2), key = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]]))
-                loc_temp_diff = loc_temp_avg[loc_temp_diff_tuple[1]] - loc_temp_avg[loc_temp_diff_tuple[0]]
+            if len(ROLLING_TEMPS) > 1:
+                blah = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]])
+                loc_temp_diff = max(combinations(loc_temp_avg, 2), key=blah)
+                loc_temp_diff = loc_temp_avg[loc_temp_diff[1]] - loc_temp_avg[loc_temp_diff[0]]
 
         # Toggles fan on if difference in temps is too much
         if loc_temp_diff > 3:
@@ -161,7 +177,7 @@ def run():
             GPIO.output(FANPIN, RELAYON)
             GPIO.output(COOLPIN, RELAYON)
             time.sleep(300)
-        
+
         # Toggles everything off if disired conditions are met
         else:
             print("Climate is within set parameters; toggling systems off if any are on")
@@ -173,6 +189,9 @@ def run():
 
 
 def init():
+    """
+    Initializes the GPIO pins
+    """
     print("initializing...")
     print("setting relays off")
     for pin in PINS:
@@ -183,4 +202,3 @@ def init():
 
 if __name__ == '__main__':
     main()
-
