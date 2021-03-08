@@ -6,6 +6,7 @@ import socket
 import time
 import threading
 import datetime
+from copy import copy
 from collections import deque
 from itertools import combinations
 import RPi.GPIO as GPIO
@@ -48,6 +49,9 @@ ROLLING_TEMPS = {}
 ROLLING_HUMS = {}
 
 DEQUELENGTH = 20 # size of the deques
+
+TEMPDEQUEDEFAULT = deque(DEQUELENGTH*[((TEMPHIGH + TEMPLOW)/2)], DEQUELENGTH)
+HUMDEQUEDEFAULT = deque(DEQUELENGTH*[40], DEQUELENGTH)
 
 # Keeps track of time of last received datagram for each location
 LAST_RECEIVED = {}
@@ -95,9 +99,9 @@ def data_collection():
         # Checks if location is alreay in the rolling_X dictionarys. If not, it creates an entry
         # in the dictionary and populates it with the defaults
         if loc not in ROLLING_TEMPS:
-            ROLLING_TEMPS[loc] = deque(DEQUELENGTH*[((TEMPHIGH + TEMPLOW)/2)], DEQUELENGTH)
+            ROLLING_TEMPS[loc] = copy(TEMPDEQUEDEFAULT)
         if loc not in ROLLING_HUMS:
-            ROLLING_HUMS[loc] = deque(DEQUELENGTH*[40], DEQUELENGTH)
+            ROLLING_HUMS[loc] = copy(HUMDEQUEDEFAULT)
 
         # Append new temp and humidity to appropriate deque in dictionaries
         ROLLING_TEMPS[loc].appendleft(temp)
