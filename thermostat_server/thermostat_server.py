@@ -129,6 +129,48 @@ def node_check():
         time.sleep(6)
 
 
+def heat_on():
+    """
+    Turn heating system on
+    """
+    print("Temp is low; toggling heat on")
+    GPIO.output(COOLPIN, RELAYOFF)
+    GPIO.output(FANPIN, RELAYON)
+    GPIO.output(HEATPIN, RELAYON)
+    time.sleep(300)
+
+def cool_on():
+    """
+    Turn cooling system on
+    """
+    print("Temp is high; toggling cooling on")
+    GPIO.output(HEATPIN, RELAYOFF)
+    GPIO.output(FANPIN, RELAYON)
+    GPIO.output(COOLPIN, RELAYON)
+    time.sleep(300)
+
+def fan_on():
+    """
+    Turn only fan on
+    """
+    print("Temps vary too much; toggling fan on")
+    GPIO.output(HEATPIN, RELAYOFF)
+    GPIO.output(COOLPIN, RELAYOFF)
+    GPIO.output(FANPIN, RELAYON)
+    time.sleep(300)
+
+
+def all_off():
+    """
+    turn all systems off
+    """
+    print("Climate is within set parameters; toggling systems off if any are on")
+    GPIO.output(HEATPIN, RELAYOFF)
+    GPIO.output(COOLPIN, RELAYOFF)
+    GPIO.output(FANPIN, RELAYOFF)
+    time.sleep(120)
+
+
 def run():
     """
     Starts the thermostat
@@ -142,54 +184,57 @@ def run():
         above_temphigh = False
         below_templow = False
         loc_temp_diff = 0
+        max_temp = TEMPHIGH
+        min_temp = TEMPLOW
 
         # Logic for determining average temp for location, temp differences, and
         # checks for temps below or above set TEMPMAX and TEMPLOW and sets the
         # above variables accordingly
         if len(ROLLING_TEMPS) > 0:
             for loc in ROLLING_TEMPS:
+
+                loc_max_temp = max(ROLLING_TEMPS[loc])
+                loc_min_temp = min(ROLLING_TEMPS[loc])
+                if loc_max_temp > max_temp:
+                    max_temp = loc_max_temp
+                if loc_min_temp < min_temp:
+                    min_temp = loc_min_temp
+
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
                 if loc_temp_avg[loc] > TEMPHIGH:
                     above_temphigh = True
                 elif loc_temp_avg[loc] < TEMPLOW:
                     below_templow = True
+
             if len(ROLLING_TEMPS) > 1:
-                blah = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]])
-                loc_temp_diff = max(combinations(loc_temp_avg, 2), key=blah)
+                diff = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]])
+                loc_temp_diff = max(combinations(loc_temp_avg, 2), key=diff)
                 loc_temp_diff = loc_temp_avg[loc_temp_diff[1]] - loc_temp_avg[loc_temp_diff[0]]
 
+
+        # Toggles heating on if all temps are below TEMPLOW
+        if max_temp < TEMPLOW:
+            heat_on()
+
+        # Toggles cooling on if all temps are above TEMPHIGH
+        elif min_temp > TEMPHIGH:
+            cool_on()
+
         # Toggles fan on if difference in temps is too much
-        if loc_temp_diff > 3:
-            print("Temps vary too much; toggling fan on")
-            GPIO.output(HEATPIN, RELAYOFF)
-            GPIO.output(COOLPIN, RELAYOFF)
-            GPIO.output(FANPIN, RELAYON)
-            time.sleep(300)
+        elif loc_temp_diff > 3:
+            fan_on()
 
         # Toggles on heat if temp average is too low
         elif below_templow:
-            print("Temp is low; toggling heat on")
-            GPIO.output(COOLPIN, RELAYOFF)
-            GPIO.output(FANPIN, RELAYON)
-            GPIO.output(HEATPIN, RELAYON)
-            time.sleep(300)
+            heat_on()
 
         # Toggles on AC if temp average is too high
         elif above_temphigh:
-            print("Temp is high; toggling cooling on")
-            GPIO.output(HEATPIN, RELAYOFF)
-            GPIO.output(FANPIN, RELAYON)
-            GPIO.output(COOLPIN, RELAYON)
-            time.sleep(300)
+            cool_on()
 
         # Toggles everything off if disired conditions are met
         else:
-            print("Climate is within set parameters; toggling systems off if any are on")
-            GPIO.output(HEATPIN, RELAYOFF)
-            GPIO.output(COOLPIN, RELAYOFF)
-            GPIO.output(FANPIN, RELAYOFF)
-            time.sleep(120)
-
+            all_off()
 
 
 def init():
