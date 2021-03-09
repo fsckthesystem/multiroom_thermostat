@@ -88,6 +88,16 @@ def main():
         GPIO.cleanup()
 
 
+def init():
+    """
+    Initializes the GPIO pins
+    """
+    print("initializing...")
+    print("setting relays off")
+    for pin in PINS:
+        GPIO.setup(pin, GPIO.OUT)
+        GPIO.output(pin, RELAYOFF)
+
 
 def data_collection():
     """
@@ -110,7 +120,6 @@ def data_collection():
         ROLLING_TEMPS[loc].appendleft(temp)
         ROLLING_HUMS[loc].appendleft(hum)
         LAST_RECEIVED[loc] = datetime.datetime.utcnow()
-
 
 
 def node_check():
@@ -182,7 +191,6 @@ def run():
     time.sleep(7)
     # loop to check rolling average of room temps and to set systems accordingly
     while True:
-
         loc_temp_avg = {}
         above_temphigh = False
         below_templow = False
@@ -195,7 +203,6 @@ def run():
         # above variables accordingly
         if len(ROLLING_TEMPS) > 0:
             for loc in ROLLING_TEMPS:
-
                 loc_max_temp = max(ROLLING_TEMPS[loc])
                 loc_min_temp = min(ROLLING_TEMPS[loc])
                 if loc_max_temp > max_temp:
@@ -238,18 +245,6 @@ def run():
         # Toggles everything off if disired conditions are met
         else:
             all_off()
-
-
-def init():
-    """
-    Initializes the GPIO pins
-    """
-    print("initializing...")
-    print("setting relays off")
-    for pin in PINS:
-        GPIO.setup(pin, GPIO.OUT)
-        GPIO.output(pin, RELAYOFF)
-
 
 
 if __name__ == '__main__':
