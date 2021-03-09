@@ -14,7 +14,10 @@ import RPi.GPIO as GPIO
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM) # set pin naming scheme to rpi
 
-UDP_IP = "192.168.100.137" # server ip
+# If you are running Debian (including Raspbian/Raspberry Pi OS) or Ubuntu,
+# you will either need to remove the "127.0.1.1 <hostname>" from your
+# /etc/hosts file, or change UDP_IP to the host's IP address manually below
+UDP_IP = socket.gethostbyname(socket.gethostname()) # server ip
 UDP_PORT = 4815 # server port
 
 # set up socket
