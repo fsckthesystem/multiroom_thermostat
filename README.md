@@ -46,8 +46,11 @@ There are 2 programs you will use; One for the controller Raspberry Pi and one f
 
 
 ### thermostat_server.py
-Inside this file, you will likely need to modify some of the constants in the code to match which pins you are using for the relay, min and max desired temps, and the IP address of the Raspberry Pi you are running it on. (Currently trying to figure out how get the IP address programmically without just getting the loopback address)
+Inside this file, you will likely need to modify some of the constants in the code to match which pins you are using for the relay, min and max desired temps, and the IP address of the Raspberry Pi you are running it on.
+#### Note
 If you are running Debian, Raspberry Pi OS/Raspbian, or Ubuntu, you will either need to modify your /etc/hosts file to remove `127.0.1.1 <hostname>' or manually put your Pi's IP address in the thermostat_server.py file.
+
+
 After that is configured to your liking, you just need to run it with root access so it can access and control GPIO pins:
 
 ```sudo python3 thermostat_server.py```
