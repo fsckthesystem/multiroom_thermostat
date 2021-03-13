@@ -56,7 +56,7 @@ After that is configured to your liking, you just need to run it with root acces
 ```sudo python3 thermostat_server.py```
 
 ### sensor_node.py
-Inside this file, you will need to change the the constant SERVER_HOSTNAME to the name of the Raspberry Pi that is running `thermostat_server.py` and change DHT_PIN to the pin the sensor is connected to.
+Inside this file, you will need to change DHT_PIN to the pin the sensor is connected to and change DHT_SENSOR to the type of sensor you are using (`Adafruit_DHT.DHT22` or `Adafruit_DHT.DHT11`).
 After that is configured, you can start it with:
 
 ```sudo python3 sensor_node.py "<name of room>" "<server hostname>```
