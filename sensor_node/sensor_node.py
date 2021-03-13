@@ -11,18 +11,18 @@ import time
 import socket
 import sys
 
-SERVER_HOSTNAME = "jetsonnano"
 
-if len(sys.argv) != 2:
-    print("Usage: python3 sensor_node.py \"<room name>\"")
+if len(sys.argv) != 3:
+    print("Usage: python3 sensor_node.py \"<room name>\" \"<server hostname>\"")
     sys.exit()
 
-
+ROOM = sys.argv[1]
+SERVER_HOSTNAME = sys.argv[2]
 UDP_IP = socket.gethostbyname(SERVER_HOSTNAME)
 UDP_PORT = 4815
 DHT_SENSOR = Adafruit_DHT.DHT22
 DHT_PIN = 4
-ROOM = sys.argv[1]
+
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
