@@ -32,7 +32,13 @@ while True:
     if humidity is not None and temperature is not None:
         print("Temp={0:0.1f}C Humidity={1:0.1f}%".format(temperature, humidity))
         message = str.encode("{0}, {1:0.1f}, {2:0.1f}".format(ROOM, temperature, humidity))
-        sock.sendto(message, (UDP_IP, UDP_PORT))
+        try:
+            sock.sendto(message, (UDP_IP, UDP_PORT))
+
+        except:
+            print("Network Error")
+
+
     else:
         print("Sensor failure. Check wiring.");
     time.sleep(3)
