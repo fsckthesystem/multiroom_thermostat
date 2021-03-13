@@ -37,9 +37,9 @@ RELAYOFF = GPIO.HIGH
 RELAYON = GPIO.LOW
 
 # Tempurature range
-TEMPHIGH = 76
-TEMPLOW = 69
-
+TEMPHIGH = 77
+TEMPLOW = 70
+TEMPMID = (TEMPHIGH + TEMPLOW) / 2
 # rolling_X variables are populated in the data_collection function with
 # deques dynamically for each node that receives from.
 
@@ -53,7 +53,7 @@ ROLLING_HUMS = {}
 
 DEQUELENGTH = 20 # size of the deques
 
-TEMPDEQUEDEFAULT = deque(DEQUELENGTH*[((TEMPHIGH + TEMPLOW)/2)], DEQUELENGTH)
+TEMPDEQUEDEFAULT = deque(DEQUELENGTH*[TEMPMID], DEQUELENGTH)
 HUMDEQUEDEFAULT = deque(DEQUELENGTH*[40], DEQUELENGTH)
 
 # Keeps track of time of last received datagram for each location
@@ -77,6 +77,7 @@ def main():
     try:
         init()
         collecting_thread.start()
+        time.sleep(20)
         checking_thread.start()
         run()
 
@@ -103,6 +104,7 @@ def data_collection():
     """
     collects incoming data from nodes and sorts into correct deque
     """
+    print("Detecting nodes")
     while True:
         data = SOCK.recvfrom(1024)[0] # buffer size is 1024 bytes
         message = data.decode()
@@ -113,6 +115,7 @@ def data_collection():
         # in the dictionary and populates it with the defaults
         if loc not in ROLLING_TEMPS:
             ROLLING_TEMPS[loc] = copy(TEMPDEQUEDEFAULT)
+            print(loc, "has connected")
         if loc not in ROLLING_HUMS:
             ROLLING_HUMS[loc] = copy(HUMDEQUEDEFAULT)
 
@@ -127,7 +130,6 @@ def node_check():
     Checks if any location has sent data in the past 10 mins
     if it has not, it removes location from dictionaries
     """
-    time.sleep(7)
     while True:
         if len(LAST_RECEIVED) > 0:
             for loc in dict(LAST_RECEIVED):
@@ -135,6 +137,7 @@ def node_check():
                     ROLLING_TEMPS.pop(loc)
                     ROLLING_HUMS.pop(loc)
                     LAST_RECEIVED.pop(loc)
+                    print("connection to", loc, "has been lost")
         else:
             print("No nodes found. Please check that nodes are running.")
 
@@ -149,7 +152,7 @@ def heat_on():
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYON)
     GPIO.output(HEATPIN, RELAYON)
-    time.sleep(300)
+    time.sleep(600)
 
 def cool_on():
     """
@@ -159,11 +162,11 @@ def cool_on():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYON)
     GPIO.output(COOLPIN, RELAYON)
-    time.sleep(300)
+    time.sleep(600)
 
 def fan_on():
     """
-    Turn only fan on
+    Turn only the fan on
     """
     print("Temps vary too much; toggling fan on")
     GPIO.output(HEATPIN, RELAYOFF)
@@ -188,7 +191,6 @@ def run():
     Starts the thermostat
     """
     print("Starting thermostat")
-    time.sleep(7)
     # loop to check rolling average of room temps and to set systems accordingly
     while True:
         loc_temp_avg = {}
@@ -211,6 +213,7 @@ def run():
                     min_temp = loc_min_temp
 
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
+                print(f"{loc}: {loc_temp_avg[loc]:0.1f}")
                 if loc_temp_avg[loc] > TEMPHIGH:
                     above_temphigh = True
                 elif loc_temp_avg[loc] < TEMPLOW:
