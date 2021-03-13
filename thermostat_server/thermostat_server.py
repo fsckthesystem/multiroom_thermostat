@@ -213,7 +213,7 @@ def run():
                     min_temp = loc_min_temp
 
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
-                print(f"{loc}: {loc_temp_avg[loc]:0.1f}")
+                print(f"{loc}: {loc_temp_avg[loc]:0.1f}F")
                 if loc_temp_avg[loc] > TEMPHIGH:
                     above_temphigh = True
                 elif loc_temp_avg[loc] < TEMPLOW:
