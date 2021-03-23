@@ -8,7 +8,6 @@ import threading
 import datetime
 from copy import copy
 from collections import deque
-from itertools import combinations
 import RPi.GPIO as GPIO
 
 GPIO.setwarnings(False)
@@ -131,7 +130,7 @@ def node_check():
     if it has not, it removes location from dictionaries
     """
     while True:
-        if len(LAST_RECEIVED) > 0:
+        if LAST_RECEIVED:
             for loc in dict(LAST_RECEIVED):
                 if (datetime.datetime.utcnow() - LAST_RECEIVED[loc]).total_seconds() >= 600:
                     ROLLING_TEMPS.pop(loc)
@@ -203,7 +202,7 @@ def run():
         # Logic for determining average temp for location, temp differences, and
         # checks for temps below or above set TEMPMAX and TEMPLOW and sets the
         # above variables accordingly
-        if len(ROLLING_TEMPS) > 0:
+        if ROLLING_TEMPS:
             for loc in ROLLING_TEMPS:
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
                 if loc_temp_avg[loc] > max_temp:
@@ -218,10 +217,7 @@ def run():
                 elif loc_temp_avg[loc] < TEMPLOW:
                     below_templow = True
 
-            if len(ROLLING_TEMPS) > 1:
-                diff = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]])
-                loc_temp_diff = max(combinations(loc_temp_avg, 2), key=diff)
-                loc_temp_diff = loc_temp_avg[loc_temp_diff[1]] - loc_temp_avg[loc_temp_diff[0]]
+            loc_temp_diff = max_temp - min_temp
 
         # Toggles heating on if all temps are below TEMPLOW
         if max_temp < TEMPLOW:

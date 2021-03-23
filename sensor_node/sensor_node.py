@@ -6,10 +6,10 @@
 
 
 
-import Adafruit_DHT
 import time
 import socket
 import sys
+import Adafruit_DHT
 
 
 if len(sys.argv) != 3:
@@ -24,7 +24,7 @@ DHT_SENSOR = Adafruit_DHT.DHT22
 DHT_PIN = 4
 
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 while True:
@@ -33,12 +33,12 @@ while True:
         print("Temp={0:0.1f}C Humidity={1:0.1f}%".format(temperature, humidity))
         message = str.encode("{0}, {1:0.1f}, {2:0.1f}".format(ROOM, temperature, humidity))
         try:
-            sock.sendto(message, (UDP_IP, UDP_PORT))
+            SOCK.sendto(message, (UDP_IP, UDP_PORT))
 
         except:
             print("Network Error")
 
 
     else:
-        print("Sensor failure. Check wiring.");
+        print("Sensor failure. Check wiring.")
     time.sleep(3)
