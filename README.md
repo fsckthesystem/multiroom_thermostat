@@ -37,7 +37,7 @@ For the Raspberry Pi that will be controlling the relay that interfaces with the
 
 For the temperature sensor Raspberry Pis and if you have a temperature sensor connected Raspberry Pi controlling the relay:
 
-```sudo pip3 install adafruit-python-dht```
+```sudo pip3 install adafruit-dht```
 
 
 ## Usage
