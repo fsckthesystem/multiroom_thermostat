@@ -77,7 +77,7 @@ def main():
     try:
         init()
         collecting_thread.start()
-        time.sleep(20)
+        time.sleep(30)
         checking_thread.start()
         run()
 
@@ -197,22 +197,21 @@ def run():
         above_temphigh = False
         below_templow = False
         loc_temp_diff = 0
-        max_temp = TEMPHIGH
-        min_temp = TEMPLOW
+        max_temp = -1000
+        min_temp = 1000
 
         # Logic for determining average temp for location, temp differences, and
         # checks for temps below or above set TEMPMAX and TEMPLOW and sets the
         # above variables accordingly
         if len(ROLLING_TEMPS) > 0:
             for loc in ROLLING_TEMPS:
-                loc_max_temp = max(ROLLING_TEMPS[loc])
-                loc_min_temp = min(ROLLING_TEMPS[loc])
-                if loc_max_temp > max_temp:
-                    max_temp = loc_max_temp
-                if loc_min_temp < min_temp:
-                    min_temp = loc_min_temp
-
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
+                if loc_temp_avg[loc] > max_temp:
+                    max_temp = loc_temp_avg[loc]
+                if loc_temp_avg[loc] < min_temp:
+                    min_temp = loc_temp_avg[loc]
+
+
                 print(f"{loc}: {loc_temp_avg[loc]:0.1f}F")
                 if loc_temp_avg[loc] > TEMPHIGH:
                     above_temphigh = True
@@ -223,7 +222,6 @@ def run():
                 diff = lambda temps: abs(loc_temp_avg[temps[0]] - loc_temp_avg[temps[1]])
                 loc_temp_diff = max(combinations(loc_temp_avg, 2), key=diff)
                 loc_temp_diff = loc_temp_avg[loc_temp_diff[1]] - loc_temp_avg[loc_temp_diff[0]]
-
 
         # Toggles heating on if all temps are below TEMPLOW
         if max_temp < TEMPLOW:
