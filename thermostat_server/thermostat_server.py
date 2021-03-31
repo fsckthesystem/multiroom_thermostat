@@ -149,7 +149,7 @@ def heat_on():
     """
     print("Temp is low; toggling heat on")
     GPIO.output(COOLPIN, RELAYOFF)
-    GPIO.output(FANPIN, RELAYON)
+    GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
     time.sleep(600)
 
@@ -159,7 +159,7 @@ def cool_on():
     """
     print("Temp is high; toggling cooling on")
     GPIO.output(HEATPIN, RELAYOFF)
-    GPIO.output(FANPIN, RELAYON)
+    GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYON)
     time.sleep(600)
 
