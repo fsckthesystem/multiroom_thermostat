@@ -36,7 +36,7 @@ RELAYOFF = GPIO.HIGH
 RELAYON = GPIO.LOW
 
 # Tempurature range
-TEMPHIGH = 77
+TEMPHIGH = 76
 TEMPLOW = 70
 TEMPMID = (TEMPHIGH + TEMPLOW) / 2
 # rolling_X variables are populated in the data_collection function with
@@ -151,7 +151,7 @@ def heat_on():
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
-    time.sleep(600)
+    time.sleep(900)
 
 def cool_on():
     """
@@ -161,7 +161,7 @@ def cool_on():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYON)
-    time.sleep(600)
+    time.sleep(900)
 
 def fan_on():
     """
