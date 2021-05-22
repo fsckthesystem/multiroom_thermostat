@@ -42,13 +42,14 @@ TEMPMID = (TEMPHIGH + TEMPLOW) / 2
 # rolling_X variables are populated in the data_collection function with
 # deques dynamically for each node that receives from.
 
-# Using deques as they can have a fixed number and drop off the oldest
-# when a new value is added.
-# This gives make getting a rolling average easier
-
 
 ROLLING_TEMPS = {}
 ROLLING_HUMS = {}
+
+
+# Using deques as they can have a fixed number and drop off the oldest
+# when a new value is added.
+# This gives make getting a rolling average easier
 
 DEQUELENGTH = 20 # size of the deques
 
@@ -151,7 +152,7 @@ def heat_on():
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
-    time.sleep(900)
+    time.sleep(600)
 
 def cool_on():
     """
@@ -161,7 +162,7 @@ def cool_on():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYON)
-    time.sleep(900)
+    time.sleep(600)
 
 def fan_on():
     """
@@ -171,7 +172,7 @@ def fan_on():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYON)
-    time.sleep(300)
+    time.sleep(120)
 
 
 def all_off():
