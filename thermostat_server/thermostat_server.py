@@ -62,8 +62,6 @@ LAST_RECEIVED = {}
 
 
 # temp_avg globals
-
-
 loc_temp_avg = {}
 above_temphigh = False
 below_templow = False
@@ -209,6 +207,9 @@ def all_off():
 
 
 def compute_temp_avg():
+    """
+    Computes the temperature averages
+    """
     global min_temp
     global max_temp
     global all_temps_avg
