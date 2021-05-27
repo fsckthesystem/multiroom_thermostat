@@ -63,13 +63,12 @@ LAST_RECEIVED = {}
 
 # temp_avg globals
 loc_temp_avg = {}
-above_temphigh = False
-below_templow = False
 loc_temp_diff = 0
 max_temp = -1000
 min_temp = 1000
 all_temps_avg = TEMPMID
-
+below_templow = False
+above_temphigh = False
 def main():
     """
     Main method
@@ -168,7 +167,6 @@ def heat_on():
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
-    print(all_temps_avg)
     while all_temps_avg < TEMPMID:
         time.sleep(10)
 
@@ -214,13 +212,18 @@ def compute_temp_avg():
     global max_temp
     global all_temps_avg
     global loc_temp_diff
-    
+        
+    global above_temphigh
+    global below_templow
+
     while True:
         # Logic for determining average temp for location, temp differences, and
         # checks for temps below or above set TEMPMAX and TEMPLOW and sets the
         # above variables accordingly
         min_temp = 1000
         max_temp = -1000
+        above_temphigh = False
+        below_templow = False
         if ROLLING_TEMPS:
             for loc in ROLLING_TEMPS:
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
@@ -250,7 +253,6 @@ def run():
     print("Starting thermostat")
     # loop to check rolling average of room temps and to set systems accordingly
     while True:
-        
         # Toggles heating on if all temps are below TEMPLOW
         if max_temp < TEMPLOW:
             heat_on()
