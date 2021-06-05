@@ -37,7 +37,7 @@ For the Raspberry Pi that will be controlling the relay that interfaces with the
 
 For the temperature sensor Raspberry Pis and if you have a temperature sensor connected Raspberry Pi controlling the relay:
 
-```sudo pip3 install adafruit-dht```
+```sudo pip3 install adafruit-circuitpython-dht```
 
 
 ## Usage
@@ -56,7 +56,7 @@ After that is configured to your liking, you just need to run it with root acces
 ```sudo python3 thermostat_server.py```
 
 ### sensor_node.py
-Inside this file, you will need to change DHT_PIN to the pin the sensor is connected to and change DHT_SENSOR to the type of sensor you are using (`Adafruit_DHT.DHT22` or `Adafruit_DHT.DHT11`).
+Inside this file, you will need to change DHT_PIN to the pin the sensor is connected to (`board.D4` for pin 4, etc) and change DHT_SENSOR to the type of sensor you are using (`adafruit_dht.DHT22` or `adafruit_dht.DHT11`).
 After that is configured, you can start it with:
 
 ```sudo python3 sensor_node.py "<name of room>" "<server hostname>```
