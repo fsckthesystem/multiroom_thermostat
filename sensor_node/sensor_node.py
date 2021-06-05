@@ -30,8 +30,11 @@ SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 while True:
-    temperature = DHT_SENSOR.temperature
-    humidity = DHT_SENSOR.humidity
+    try:
+        temperature = DHT_SENSOR.temperature
+        humidity = DHT_SENSOR.humidity
+    except:
+        print("sensor error")
     if humidity is not None and temperature is not None:
         print("Temp={0:0.1f}C Humidity={1:0.1f}%".format(temperature, humidity))
         message = str.encode("{0}, {1:0.1f}, {2:0.1f}".format(ROOM, temperature, humidity))

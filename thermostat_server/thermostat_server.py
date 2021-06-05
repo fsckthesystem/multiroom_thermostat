@@ -253,30 +253,32 @@ def run():
     print("Starting thermostat")
     # loop to check rolling average of room temps and to set systems accordingly
     while True:
-        # Toggles heating on if all temps are below TEMPLOW
-        if max_temp < TEMPLOW:
-            heat_on()
+        if ROLLING_TEMPS:
+            # Toggles heating on if all temps are below TEMPLOW
+            if max_temp < TEMPLOW:
+                heat_on()
 
-        # Toggles cooling on if all temps are above TEMPHIGH
-        elif min_temp > TEMPHIGH:
-            cool_on()
+            # Toggles cooling on if all temps are above TEMPHIGH
+            elif min_temp > TEMPHIGH:
+                cool_on()
 
-        # Toggles fan on if difference in temps is too much
-        elif loc_temp_diff > TEMPDIFF:
-            fan_on()
+            # Toggles fan on if difference in temps is too much
+            elif loc_temp_diff > TEMPDIFF:
+                fan_on()
 
-        # Toggles on heat if temp average is too low
-        elif below_templow:
-            heat_on()
+            # Toggles on heat if temp average is too low
+            elif below_templow:
+                heat_on()
 
-        # Toggles on AC if temp average is too high
-        elif above_temphigh:
-            cool_on()
+            # Toggles on AC if temp average is too high
+            elif above_temphigh:
+                cool_on()
 
-        # Toggles everything off if disired conditions are met
+            # Toggles everything off if disired conditions are met
+            else:
+                all_off()
         else:
-            all_off()
-
+            time.sleep(10)
 
 if __name__ == '__main__':
     main()
