@@ -36,21 +36,23 @@ RELAYOFF = GPIO.HIGH
 RELAYON = GPIO.LOW
 
 # Tempurature range
-TEMPHIGH = 77
+TEMPHIGH = 76
 TEMPLOW = 70
 TEMPMID = (TEMPHIGH + TEMPLOW) / 2
+TEMPDIFF = 3
 # rolling_X variables are populated in the data_collection function with
 # deques dynamically for each node that receives from.
-
-# Using deques as they can have a fixed number and drop off the oldest
-# when a new value is added.
-# This gives make getting a rolling average easier
 
 
 ROLLING_TEMPS = {}
 ROLLING_HUMS = {}
 
-DEQUELENGTH = 20 # size of the deques
+
+# Using deques as they can have a fixed number and drop off the oldest
+# when a new value is added.
+# This gives make getting a rolling average easier
+
+DEQUELENGTH = 10 # size of the deques
 
 TEMPDEQUEDEFAULT = deque(DEQUELENGTH*[TEMPMID], DEQUELENGTH)
 HUMDEQUEDEFAULT = deque(DEQUELENGTH*[40], DEQUELENGTH)
@@ -59,6 +61,14 @@ HUMDEQUEDEFAULT = deque(DEQUELENGTH*[40], DEQUELENGTH)
 LAST_RECEIVED = {}
 
 
+# temp_avg globals
+loc_temp_avg = {}
+loc_temp_diff = 0
+max_temp = -1000
+min_temp = 1000
+all_temps_avg = TEMPMID
+below_templow = False
+above_temphigh = False
 def main():
     """
     Main method
@@ -72,11 +82,16 @@ def main():
     checking_thread = threading.Thread(target=node_check)
     checking_thread.daemon = True
 
+    # Creating thread for computing temp averages
+    compute_temp_avg_thread = threading.Thread(target=compute_temp_avg)
+    compute_temp_avg_thread.daemon = True
     # Start up server
     try:
         init()
         collecting_thread.start()
         time.sleep(30)
+        compute_temp_avg_thread.start()
+        time.sleep(2)
         checking_thread.start()
         run()
 
@@ -84,6 +99,7 @@ def main():
     except KeyboardInterrupt:
         print("\nQuiting...\nCleaning up...\n")
         checking_thread.join(1)
+        compute_temp_avg_thread.join(1)
         collecting_thread.join(1)
         GPIO.cleanup()
 
@@ -132,7 +148,7 @@ def node_check():
     while True:
         if LAST_RECEIVED:
             for loc in dict(LAST_RECEIVED):
-                if (datetime.datetime.utcnow() - LAST_RECEIVED[loc]).total_seconds() >= 600:
+                if (datetime.datetime.utcnow() - LAST_RECEIVED[loc]).total_seconds() >= 60:
                     ROLLING_TEMPS.pop(loc)
                     ROLLING_HUMS.pop(loc)
                     LAST_RECEIVED.pop(loc)
@@ -149,9 +165,10 @@ def heat_on():
     """
     print("Temp is low; toggling heat on")
     GPIO.output(COOLPIN, RELAYOFF)
-    GPIO.output(FANPIN, RELAYON)
+    GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
-    time.sleep(600)
+    while all_temps_avg < TEMPMID:
+        time.sleep(10)
 
 def cool_on():
     """
@@ -159,9 +176,10 @@ def cool_on():
     """
     print("Temp is high; toggling cooling on")
     GPIO.output(HEATPIN, RELAYOFF)
-    GPIO.output(FANPIN, RELAYON)
+    GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYON)
-    time.sleep(600)
+    while all_temps_avg > TEMPMID:
+        time.sleep(10)
 
 def fan_on():
     """
@@ -171,7 +189,8 @@ def fan_on():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYON)
-    time.sleep(300)
+    while loc_temp_diff > TEMPDIFF:
+        time.sleep(10)
 
 
 def all_off():
@@ -182,26 +201,29 @@ def all_off():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
-    time.sleep(120)
+    time.sleep(30)
 
 
-def run():
+def compute_temp_avg():
     """
-    Starts the thermostat
+    Computes the temperature averages
     """
-    print("Starting thermostat")
-    # loop to check rolling average of room temps and to set systems accordingly
+    global min_temp
+    global max_temp
+    global all_temps_avg
+    global loc_temp_diff
+        
+    global above_temphigh
+    global below_templow
+
     while True:
-        loc_temp_avg = {}
-        above_temphigh = False
-        below_templow = False
-        loc_temp_diff = 0
-        max_temp = -1000
-        min_temp = 1000
-
         # Logic for determining average temp for location, temp differences, and
         # checks for temps below or above set TEMPMAX and TEMPLOW and sets the
         # above variables accordingly
+        min_temp = 1000
+        max_temp = -1000
+        above_temphigh = False
+        below_templow = False
         if ROLLING_TEMPS:
             for loc in ROLLING_TEMPS:
                 loc_temp_avg[loc] = sum(ROLLING_TEMPS[loc])/len(ROLLING_TEMPS[loc])
@@ -217,8 +239,20 @@ def run():
                 elif loc_temp_avg[loc] < TEMPLOW:
                     below_templow = True
 
+            all_temps_avg = sum(loc_temp_avg.values()) / float(len(loc_temp_avg))
             loc_temp_diff = max_temp - min_temp
 
+        time.sleep(10)
+
+
+
+def run():
+    """
+    Starts the thermostat
+    """
+    print("Starting thermostat")
+    # loop to check rolling average of room temps and to set systems accordingly
+    while True:
         # Toggles heating on if all temps are below TEMPLOW
         if max_temp < TEMPLOW:
             heat_on()
@@ -228,7 +262,7 @@ def run():
             cool_on()
 
         # Toggles fan on if difference in temps is too much
-        elif loc_temp_diff > 3:
+        elif loc_temp_diff > TEMPDIFF:
             fan_on()
 
         # Toggles on heat if temp average is too low
