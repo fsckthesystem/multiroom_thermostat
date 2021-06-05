@@ -22,7 +22,7 @@ On each of the 3 relays common terminal, you will need to connect your heating w
 This software only currently supports heating/cooling/fan or '4 wire' systems with no reserve heating or cooling setups as that is what I have and what I can test on. If you need something other than that, you can fork this project and have a go at adjusting it to work with other systems. Hopefully my code comments aren't too terrible!
 
 ### Software
-You will need to install 2 packages from pip: RPi.GPIO and Adafruit-Python-DHT
+You will need to install 3 packages from pip: RPi.GPIO and Adafruit-CircuitPython-DHT
 
 
 first we will make sure pip3 is up-to-date
@@ -37,7 +37,10 @@ For the Raspberry Pi that will be controlling the relay that interfaces with the
 
 For the temperature sensor Raspberry Pis and if you have a temperature sensor connected Raspberry Pi controlling the relay:
 
-```sudo pip3 install adafruit-circuitpython-dht```
+```
+sudo apt update && sudo apt install libgpiod2
+sudo pip3 install adafruit-circuitpython-dht
+```
 
 
 ## Usage
