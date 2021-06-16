@@ -180,6 +180,8 @@ def cool_on():
     GPIO.output(COOLPIN, RELAYON)
     while all_temps_avg > TEMPMID:
         time.sleep(10)
+        if min_temp < TEMPLOW or max_temp > TEMPHIGH:
+            break
 
 def fan_on():
     """
