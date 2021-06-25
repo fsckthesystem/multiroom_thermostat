@@ -123,21 +123,24 @@ def data_collection():
     while True:
         data = SOCK.recvfrom(1024)[0] # buffer size is 1024 bytes
         message = data.decode()
-        loc, temp, hum = message.split(", ")
-        temp = (float(temp) * 1.8) + 32 # convert from C to F
+        try:
+            loc, temp, hum = message.split(", ")
+            temp = (float(temp) * 1.8) + 32 # convert from C to F
 
-        # Checks if location is alreay in the rolling_X dictionarys. If not, it creates an entry
-        # in the dictionary and populates it with the defaults
-        if loc not in ROLLING_TEMPS:
-            ROLLING_TEMPS[loc] = copy(TEMPDEQUEDEFAULT)
-            print(loc, "has connected")
-        if loc not in ROLLING_HUMS:
-            ROLLING_HUMS[loc] = copy(HUMDEQUEDEFAULT)
+            # Checks if location is alreay in the rolling_X dictionarys. If not, it creates an entry
+            # in the dictionary and populates it with the defaults
+            if loc not in ROLLING_TEMPS:
+                ROLLING_TEMPS[loc] = copy(TEMPDEQUEDEFAULT)
+                print(loc, "has connected")
+            if loc not in ROLLING_HUMS:
+                ROLLING_HUMS[loc] = copy(HUMDEQUEDEFAULT)
 
-        # Append new temp and humidity to appropriate deque in dictionaries
-        ROLLING_TEMPS[loc].appendleft(temp)
-        ROLLING_HUMS[loc].appendleft(hum)
-        LAST_RECEIVED[loc] = datetime.datetime.utcnow()
+            # Append new temp and humidity to appropriate deque in dictionaries
+            ROLLING_TEMPS[loc].appendleft(temp)
+            ROLLING_HUMS[loc].appendleft(hum)
+            LAST_RECEIVED[loc] = datetime.datetime.utcnow()
+        except:
+            print("malformed data")
 
 
 def node_check():
