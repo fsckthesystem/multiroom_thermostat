@@ -69,6 +69,10 @@ min_temp = 1000
 all_temps_avg = TEMPMID
 below_templow = False
 above_temphigh = False
+
+PAUSED = False
+
+
 def main():
     """
     Main method
@@ -119,26 +123,41 @@ def data_collection():
     """
     collects incoming data from nodes and sorts into correct deque
     """
+    global PAUSED
     print("Detecting nodes")
     while True:
         data = SOCK.recvfrom(1024)[0] # buffer size is 1024 bytes
         message = data.decode()
         try:
-            loc, temp, hum = message.split(", ")
-            temp = (float(temp) * 1.8) + 32 # convert from C to F
+            message_function = message[0]
+            message = message[1:]
+            
+            if message_function == "t":
+                loc, temp, hum = message.split(", ")
+                temp = (float(temp) * 1.8) + 32 # convert from C to F
 
-            # Checks if location is alreay in the rolling_X dictionarys. If not, it creates an entry
-            # in the dictionary and populates it with the defaults
-            if loc not in ROLLING_TEMPS:
-                ROLLING_TEMPS[loc] = copy(TEMPDEQUEDEFAULT)
-                print(loc, "has connected")
-            if loc not in ROLLING_HUMS:
-                ROLLING_HUMS[loc] = copy(HUMDEQUEDEFAULT)
+                # Checks if location is alreay in the rolling_X dictionarys. If not, it creates an entry
+                # in the dictionary and populates it with the defaults
+                if loc not in ROLLING_TEMPS:
+                    ROLLING_TEMPS[loc] = copy(TEMPDEQUEDEFAULT)
+                    print(loc, "has connected")
+                if loc not in ROLLING_HUMS:
+                    ROLLING_HUMS[loc] = copy(HUMDEQUEDEFAULT)
 
-            # Append new temp and humidity to appropriate deque in dictionaries
-            ROLLING_TEMPS[loc].appendleft(temp)
-            ROLLING_HUMS[loc].appendleft(hum)
-            LAST_RECEIVED[loc] = datetime.datetime.utcnow()
+                # Append new temp and humidity to appropriate deque in dictionaries
+                ROLLING_TEMPS[loc].appendleft(temp)
+                ROLLING_HUMS[loc].appendleft(hum)
+                LAST_RECEIVED[loc] = datetime.datetime.utcnow()
+            
+            elif message_function == "c":
+                if message == "pause":
+                    PAUSED = True
+                    print("pausing")
+                elif message == "unpause":
+                    PAUSED = False
+                    print("unpausing")
+                else:
+                    print("unknown command function")
         except:
             print("malformed data")
 
@@ -166,28 +185,32 @@ def heat_on():
     """
     Turn heating system on
     """
+    global PAUSED
     print("Temp is low; toggling heat on")
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
-    while all_temps_avg < TEMPMID:
+    while all_temps_avg < TEMPMID or max_temp < TEMPLOW:
         time.sleep(10)
 
 def cool_on():
     """
     Turn cooling system on
     """
+    global PAUSED
     print("Temp is high; toggling cooling on")
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYON)
-    while all_temps_avg > TEMPMID:
+    while (all_temps_avg > TEMPMID or min_temp > TEMPHIGH) and (PAUSED == False):
         time.sleep(10)
+        print(PAUSED)
 
 def fan_on():
     """
     Turn only the fan on
     """
+    global PAUSED
     print("Temps vary too much; toggling fan on")
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
@@ -201,6 +224,7 @@ def all_off():
     """
     turn all systems off
     """
+    global PAUSED
     print("Climate is within set parameters; toggling systems off if any are on")
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
@@ -254,33 +278,39 @@ def run():
     """
     Starts the thermostat
     """
+    global PAUSED
     print("Starting thermostat")
     # loop to check rolling average of room temps and to set systems accordingly
     while True:
         if ROLLING_TEMPS:
-            # Toggles heating on if all temps are below TEMPLOW
-            if max_temp < TEMPLOW:
-                heat_on()
+            if PAUSED is False:
+                # Toggles heating on if all temps are below TEMPLOW
+                if max_temp < TEMPLOW:
+                    heat_on()
 
-            # Toggles cooling on if all temps are above TEMPHIGH
-            elif min_temp > TEMPHIGH:
-                cool_on()
+                # Toggles cooling on if all temps are above TEMPHIGH
+                elif min_temp > TEMPHIGH:
+                    cool_on()
 
-            # Toggles fan on if difference in temps is too much
-            elif loc_temp_diff > TEMPDIFF:
-                fan_on()
+                # Toggles fan on if difference in temps is too much
+                elif loc_temp_diff > TEMPDIFF:
+                    fan_on()
 
-            # Toggles on heat if temp average is too low
-            elif below_templow:
-                heat_on()
+                # Toggles on heat if temp average is too low
+                elif below_templow:
+                    heat_on()
 
-            # Toggles on AC if temp average is too high
-            elif above_temphigh:
-                cool_on()
+                # Toggles on AC if temp average is too high
+                elif above_temphigh:
+                    cool_on()
 
-            # Toggles everything off if disired conditions are met
+                # Toggles everything off if disired conditions are met
+                else:
+                    all_off()
             else:
                 all_off()
+                print(PAUSED)
+                time.sleep(30)
         else:
             time.sleep(10)
 
