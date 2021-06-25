@@ -190,7 +190,7 @@ def heat_on():
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYOFF)
     GPIO.output(HEATPIN, RELAYON)
-    while all_temps_avg < TEMPMID or max_temp < TEMPLOW:
+    while (all_temps_avg < TEMPMID or max_temp < TEMPLOW) and (PAUSED == False):
         time.sleep(10)
 
 def cool_on():
@@ -204,7 +204,6 @@ def cool_on():
     GPIO.output(COOLPIN, RELAYON)
     while (all_temps_avg > TEMPMID or min_temp > TEMPHIGH) and (PAUSED == False):
         time.sleep(10)
-        print(PAUSED)
 
 def fan_on():
     """
@@ -215,7 +214,7 @@ def fan_on():
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
     GPIO.output(FANPIN, RELAYON)
-    while loc_temp_diff > TEMPDIFF:
+    while (loc_temp_diff > TEMPDIFF) and (PAUSED == False):
         time.sleep(10)
         if min_temp < TEMPLOW or max_temp > TEMPHIGH:
             break
@@ -224,7 +223,6 @@ def all_off():
     """
     turn all systems off
     """
-    global PAUSED
     print("Climate is within set parameters; toggling systems off if any are on")
     GPIO.output(HEATPIN, RELAYOFF)
     GPIO.output(COOLPIN, RELAYOFF)
@@ -309,7 +307,6 @@ def run():
                     all_off()
             else:
                 all_off()
-                print(PAUSED)
                 time.sleep(30)
         else:
             time.sleep(10)
