@@ -158,6 +158,11 @@ def data_collection():
                     print("unpausing")
                 else:
                     print("unknown command function")
+            elif message_function == "i":
+                if message == "status":
+                    print("Paused:", PAUSED)
+                else:
+                    print("unknown info function")
         except:
             print("malformed data")
 
